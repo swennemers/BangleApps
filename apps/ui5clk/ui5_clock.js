@@ -1,26 +1,34 @@
-var hour_hand = {
+const hour_hand = {
     width : 61, height : 8, bpp : 1,
     transparent : 0,
     buffer : E.toArrayBuffer(atob("/////////////////////////////////////////////////////////////////////////////////w=="))
 };
-var minute_hand = {
+//TODO finetune
+const ui5_hour_hand = {
+    width : 61, height : 8, bpp : 4,
+    transparent : 0,
+    buffer : require("heatshrink").decompress(atob("/4AY+EN7sAh4eZhvQho8a/o7BHjfd7vQHjh5cDoS2bDwPdHjUAPIQA=="))
+  }
+const minute_hand = {
     width : 110, height : 4, bpp : 1,
     transparent : 0,
     buffer : E.toArrayBuffer(atob("/////////////////////////////////////////////////////////////////////////w=="))
 };
 
-var ui5_center = {
+const ui5_center_img = {
     width : 48, height : 48, bpp : 8,
     transparent : 254,
     buffer : require("heatshrink").decompress(atob("/wA/AA3A4AwwGNwwCGVwxwGAgxxEDhitDSIwbDCgwZCzIZTOzgbRazYwSFzYwRUKgfPB5IuVF5+63SMbCQgWIFoYvIfzAWJFoYABBoouXCxYvdFo4vUfZwtLDBAuFF6gtNF5wNDFyAzMFxYvELzouMF5QwHFxwiBFpQuCF7goJF7I0HFaAuFF6qCKF7AwMFzAvKGBYuaMCgiHFx4vMGJIjKFpgvPGAxTJ4wbKEBIMHWKIvPJ4ouWF4YwOF5QtQWYgwNb44uUF7RhEFyYvCGBQuISKQiGF4QwIFxLyHFp4vFGA4vLGAwAQFy4wXRqowZFzKSYFqwxbFywwWFrAyUFroyNDiY="))
 };
-var ui5_hand = {};
 
 //g.fillRect(0,24,239,239); // Apps area
 let intervalRef = null;
 const p180 = Math.PI/180;
 const clock_center = {x:Math.floor((240-1)/2), y:24+Math.floor((239-24)/2)};
 // ={ x: 119, y: 131 }
+
+const center_img_position = {x:Math.floor((240- ui5_center_img.width)/2), y:5+Math.floor((240- ui5_center_img.height)/2)};
+
 const radius = Math.floor((239-24+1)/2); // =108
 
 let tick0 = Graphics.createArrayBuffer(30,8,1);
@@ -94,10 +102,8 @@ function draw_clock(){
     let minute_agl = minute_angle(date);
     g.drawImage(hour_hand, hour_pos_x(hour_agl), hour_pos_y(hour_agl), {rotate:hour_agl*p180}); //
     g.drawImage(minute_hand, minute_pos_x(minute_agl), minute_pos_y(minute_agl), {rotate:minute_agl*p180}); //
-    g.setColor(1,1,1);
-    g.fillCircle(clock_center.x, clock_center.y, 6);
-    g.setColor(0,0,0);
-    g.fillCircle(clock_center.x, clock_center.y, 3);
+
+    g.drawImage(ui5_center_img, center_img_position.x,center_img_position.y);
 
     // draw minute ticks. Takes long time to draw!
     g.setColor(1,1,1);
