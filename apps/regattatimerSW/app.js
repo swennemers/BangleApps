@@ -185,6 +185,7 @@ var KalmanFilter = (function () {
 
 
 
+
 // END FORK
 
 
@@ -339,14 +340,17 @@ XoX o o XoX
 
     nxtWp: function (inc) {
       this.settings.wp += inc;
-      loadWp();
+      this.loadWp();
     },
+    savSettings: function() {
+        require("Storage").write('regattaTimerSW.json',this.settings);
+      },
     loadWp: function () {
       var w = require("waypoints").load();
       if (this.settings.wp >= w.length) this.settings.wp = 0;
       if (this.settings.wp < 0) this.settings.wp = w.length - 1;
-      savSettings();
-      wp = w[this.settings.wp];
+      this.saveSettings();
+      this.wp = w[this.settings.wp];
     },
 
     radians: function (a) {
@@ -354,8 +358,8 @@ XoX o o XoX
     },
 
     distance: function (a, b) {
-      var x = radians(a.lon - b.lon) * Math.cos(radians((a.lat + b.lat) / 2));
-      var y = radians(b.lat - a.lat);
+      var x = this.radians(a.lon - b.lon) * Math.cos(this.radians((a.lat + b.lat) / 2));
+      var y = this.radians(b.lat - a.lat);
 
       // Distance in selected units
       var d = Math.sqrt(x * x + y * y) * 6371000;
@@ -367,9 +371,9 @@ XoX o o XoX
     },
 
     drawFix: function (dat) {
-      if (!canDraw) return;
+      if (!this.canDraw) return;
 
-      buf.clear();
+      this.buf.clear();
 
       var v = "";
       var u = "";
@@ -380,7 +384,7 @@ XoX o o XoX
       // Primary Units
       u = this.settings.primSpd ? this.settings.spd_unit : dat.alt_units;
 
-      drawPrimary(v, u);
+      this.drawPrimary(v, u);
 
       // Secondary Display
       v = this.settings.primSpd ? dat.alt.toString() : dat.speed.toString();
@@ -388,24 +392,24 @@ XoX o o XoX
       // Secondary Units
       u = this.settings.primSpd ? dat.alt_units : this.settings.spd_unit;
 
-      drawSecondary(v, u);
+      this.drawSecondary(v, u);
 
       // Time
-      drawTime();
+      this.drawTime();
 
       // Waypoint name
-      drawWP();
+      this.drawWP();
 
       //Sats
       if (dat.age > 10) {
         if (dat.age > 90) dat.age = ">90";
-        drawSats("Age:" + dat.age);
-      } else drawSats("Sats:" + dat.sats);
+        this.drawSats("Age:" + dat.age);
+      } else this.drawSats("Sats:" + dat.sats);
 
       /*  else if (!BANGLEJS2) {
     drawSats('Sats:'+dat.sats);
   } else {
-    if (lf.fix) {
+    if (this.lf.fix) {
       if(emulator)console.log("fix "+lf.fix);
       drawSats('Sats:'+dat.sats);
     } else {
@@ -415,20 +419,20 @@ XoX o o XoX
   }
 */
       g.reset();
-      g.drawImage(img, 0, 40);
+      g.drawImage(this.img, 0, 40);
     },
 
     drawClock: function () {
-      if (!canDraw) return;
-      buf.clear();
-      drawTime();
-      drawWP();
+      if (!this.canDraw) return;
+      this.buf.clear();
+      this.drawTime();
+      this.drawWP();
       g.reset();
-      g.drawImage(img, 0, 40);
+      g.drawImage(this.img, 0, 40);
     },
 
     drawPrimary: function (n, u) {
-      if (emulator) console.log("drawPrimary: " + n + " " + u);
+      if (this.emulator) console.log("drawPrimary: " + n + " " + u);
       // Primary Display
 
       var s = 40; // Font size
@@ -440,23 +444,23 @@ XoX o o XoX
       if (l <= 4) s = 85;
       if (l <= 3) s = 110;
 
-      buf.setFontAlign(0, -1); //Centre
-      buf.setColor(1);
+      this.buf.setFontAlign(0, -1); //Centre
+      this.buf.setColor(1);
       if (BANGLEJS2) s *= fontFactorB2;
-      buf.setFontVector(s);
-      buf.drawString(n, screenW_Half - 10, 0);
+      this.buf.setFontVector(s);
+      this.buf.drawString(n, screenW_Half - 10, 0);
 
       // Primary Units
       s = 35; // Font size
-      buf.setFontAlign(1, -1, 3); //right
-      buf.setColor(2);
+      this.buf.setFontAlign(1, -1, 3); //right
+      this.buf.setColor(2);
       if (BANGLEJS2) s = 20;
-      buf.setFontVector(s);
-      buf.drawString(u, screenW - 30, 0);
+      this.buf.setFontVector(s);
+      this.buf.drawString(u, screenW - 30, 0);
     },
 
     drawSecondary: function (n, u) {
-      if (emulator) console.log("drawSecondary: " + n + " " + u);
+      if (this.emulator) console.log("drawSecondary: " + n + " " + u);
       var xu = 180; // units X position
       var l = n.length;
       if (l <= 5) xu = 155;
@@ -465,21 +469,21 @@ XoX o o XoX
       if (l <= 2) xu = 65;
       if (l <= 1) xu = 35;
 
-      buf.setFontAlign(-1, 1); //left, bottom
-      buf.setColor(1);
+      this.buf.setFontAlign(-1, 1); //left, bottom
+      this.buf.setColor(1);
       var s = 45; // Font size
       if (BANGLEJS2) s *= fontFactorB2;
-      buf.setFontVector(s);
-      buf.drawString(n, 5, screenH_TwoThirds - 20);
+      this.buf.setFontVector(s);
+      this.buf.drawString(n, 5, screenH_TwoThirds - 20);
 
       // Secondary Units
-      buf.setFontAlign(-1, 1); //left, bottom
+      this.buf.setFontAlign(-1, 1); //left, bottom
 
-      buf.setColor(2);
+      this.buf.setColor(2);
       s = 30; // Font size
       if (BANGLEJS2) s *= fontFactorB2;
-      buf.setFontVector(s);
-      buf.drawString(u, xu - (BANGLEJS2 * xu) / 5, screenH_TwoThirds - 25);
+      this.buf.setFontVector(s);
+      this.buf.drawString(u, xu - (BANGLEJS2 * xu) / 5, screenH_TwoThirds - 25);
     },
 
     drawTime: function () {
@@ -488,38 +492,38 @@ XoX o o XoX
       if (this.settings.modeA == 2) {
         x = screenW_Half;
         y = 0;
-        buf.setFontAlign(0, -1);
-        buf.setFontVector(screenH_Third);
+        this.buf.setFontAlign(0, -1);
+        this.buf.setFontVector(screenH_Third);
       } else {
         x = 0;
         y = screenH_TwoThirds;
-        buf.setFontAlign(-1, 1);
-        if (!BANGLEJS2) buf.setFont("7x11Numeric7Seg", 2);
-        else buf.setFont("6x8", 2);
+        this.buf.setFontAlign(-1, 1);
+        if (!BANGLEJS2) this.buf.setFont("7x11Numeric7Seg", 2);
+        else this.buf.setFont("6x8", 2);
       }
 
-      buf.setColor(0);
-      buf.drawString(time, x, y);
-      time = require("locale").time(new Date(), 1);
-      buf.setColor(3);
-      buf.drawString(time, x, y);
+      this.buf.setColor(0);
+      this.buf.drawString(this.time, x, y);
+      this.time = require("locale").time(new Date(), 1);
+      this.buf.setColor(3);
+      this.buf.drawString(this.time, x, y);
     },
 
     drawWP: function () {
       // from  waypoints.json - see README.md
-      var nm = wp.name;
+      var nm = this.wp.name;
       if (nm == undefined || nm == "NONE" || this.settings.modeA == 1) nm = "";
-      if (emulator) nm = "waypoint";
-      buf.setColor(2);
+      if (this.emulator) nm = "waypoint";
+      this.buf.setColor(2);
       var s = 20; // Font size
 
       if (this.settings.modeA == 0) {
         // dist mode
-        if (emulator) console.log("drawWP() 0: " + nm);
-        buf.setFontAlign(-1, 1); //left, bottom
+        if (this.emulator) console.log("drawWP() 0: " + nm);
+        this.buf.setFontAlign(-1, 1); //left, bottom
         if (BANGLEJS2) s *= fontFactorB2;
-        buf.setFontVector(s);
-        buf.drawString(
+        this.buf.setFontVector(s);
+        this.buf.drawString(
           nm.substring(0, 6),
           72,
           screenH_TwoThirds - BANGLEJS2 * 15,
@@ -528,12 +532,12 @@ XoX o o XoX
 
       if (this.settings.modeA == 2) {
         // clock/large mode
-        if (emulator) console.log("drawWP() 2: " + nm);
+        if (this.emulator) console.log("drawWP() 2: " + nm);
         s = 55; // Font size
-        buf.setFontAlign(0, 1); //left, bottom
+        this.buf.setFontAlign(0, 1); //left, bottom
         if (BANGLEJS2) s *= fontFactorB2;
-        buf.setFontVector(s);
-        buf.drawString(
+        this.buf.setFontVector(s);
+        this.buf.drawString(
           nm.substring(0, 6),
           screenW_Half,
           screenH_TwoThirds - BANGLEJS2 * 20,
@@ -542,24 +546,24 @@ XoX o o XoX
     },
 
     drawSats: function (sats) {
-      buf.setColor(3);
-      buf.setFont("6x8", 2);
-      buf.setFontAlign(1, 1); //right, bottom
-      buf.drawString(sats, screenW, screenH_TwoThirds);
+      this.buf.setColor(3);
+      this.buf.setFont("6x8", 2);
+      this.buf.setFontAlign(1, 1); //right, bottom
+      this.buf.drawString(sats, screenW, screenH_TwoThirds);
 
-      s = 30; // Font size
-      if (BANGLEJS2) s = 18;
-      buf.setFontVector(s);
-      buf.setColor(2);
+      this.s = 30; // Font size
+      if (BANGLEJS2) this.s = 18;
+      this.buf.setFontVector(this.s);
+      this.buf.setColor(2);
 
       if (this.settings.modeA == 1) {
-        buf.drawString("A", screenW, 140 - BANGLEJS2 * 40);
-        if (showMax) {
-          buf.setFontAlign(0, 1); //centre, bottom
-          buf.drawString("MAX", screenW_Half, screenH_TwoThirds + 4);
+        this.buf.drawString("A", screenW, 140 - BANGLEJS2 * 40);
+        if (this.showMax) {
+          this.buf.setFontAlign(0, 1); //centre, bottom
+          this.buf.drawString("MAX", screenW_Half, screenH_TwoThirds + 4);
         }
       }
-      if (this.settings.modeA == 0) buf.drawString("D", screenW, 140 - BANGLEJS2 * 40);
+      if (this.settings.modeA == 0) this.buf.drawString("D", screenW, 140 - BANGLEJS2 * 40);
     },
 
     // END FORK
@@ -617,7 +621,7 @@ XoX o o XoX
         // this.layout.satellites.label = fix.satellites;
         // adding speedalt code:
 
-        if (emulator) {
+        if (this.emulator) {
           fix.fix = 1;
           fix.speed = 10 + Math.random() * 5;
           fix.alt = 354 + Math.random() * 50;
@@ -636,93 +640,93 @@ XoX o o XoX
         var di = "---";
         var age = "---";
 
-        if (fix.fix) lf = fix;
+        if (fix.fix) this.lf = fix;
 
-        if (lf.fix) {
-          //    if (BANGLEJS2 && !emulator) Bangle.removeListener('GPS-raw', onGPSraw);
+        if (this.lf.fix) {
+          //    if (BANGLEJS2 && !this.emulator) Bangle.removeListener('GPS-raw', onGPSraw);
 
           // Smooth data
-          if (lf.smoothed !== 1) {
-            if (this.settings.spdFilt) lf.speed = spdFilter.filter(lf.speed);
-            if (this.settings.altFilt) lf.alt = altFilter.filter(lf.alt);
-            lf.smoothed = 1;
-            if (max.n <= 15) max.n++;
+          if (this.lf.smoothed !== 1) {
+            if (this.settings.spdFilt) this.lf.speed = this.spdFilter.filter(this.lf.speed);
+            if (this.settings.altFilt) this.lf.alt = this.altFilter.filter(this.lf.alt);
+            this.lf.smoothed = 1;
+            if (this.max.n <= 15) this.max.n++;
           }
 
           // Speed
           if (this.settings.spd == 0) {
             m = require("locale")
-              .speed(lf.speed)
+              .speed(this.lf.speed)
               .match(/([0-9,\.]+)(.*)/); // regex splits numbers from units
             sp = parseFloat(m[1]);
             this.settings.spd_unit = m[2];
-          } else sp = parseFloat(lf.speed) / parseFloat(this.settings.spd); // Calculate for selected units
+          } else sp = parseFloat(this.lf.speed) / parseFloat(this.settings.spd); // Calculate for selected units
 
           if (sp < 10) sp = sp.toFixed(1);
           else sp = Math.round(sp);
-          if (parseFloat(sp) > parseFloat(max.spd) && max.n > 15)
-            max.spd = parseFloat(sp);
+          if (parseFloat(sp) > parseFloat(this.max.spd) && this.max.n > 15)
+            this.max.spd = parseFloat(sp);
 
           // Altitude
-          al = lf.alt;
+          al = this.lf.alt;
           al = Math.round(parseFloat(al) / parseFloat(this.settings.alt));
-          if (parseFloat(al) > parseFloat(max.alt) && max.n > 15)
-            max.alt = parseFloat(al);
+          if (parseFloat(al) > parseFloat(this.max.alt) && this.max.n > 15)
+            this.max.alt = parseFloat(al);
 
           // Distance to waypoint
-          di = distance(lf, wp);
+          di = this.distance(this.lf, this.wp);
           if (isNaN(di)) di = 0;
 
           // Age of last fix (secs)
-          age = Math.max(0, Math.round(getTime()) - lf.time.getTime() / 1000);
+          age = Math.max(0, Math.round(getTime()) - this.lf.time.getTime() / 1000);
         }
 
         if (this.settings.modeA == 1) {
-          if (showMax)
-            drawFix({
-              speed: max.spd,
-              sats: lf.satellites,
-              alt: max.alt,
+          if (this.showMax)
+            this.drawFix({
+              speed: this.max.spd,
+              sats: this.lf.satellites,
+              alt: this.max.alt,
               alt_units: this.settings.alt_unit,
               age: age,
-              fix: lf.fix,
+              fix: this.lf.fix,
             });
           // Speed and alt maximums
           else
-            drawFix({
+            this.drawFix({
               speed: sp,
-              sats: lf.satellites,
+              sats: this.lf.satellites,
               alt: al,
               alt_units: this.settings.alt_unit,
               age: age,
-              fix: lf.fix,
+              fix: this.lf.fix,
             }); // Show speed/altitude
         }
         if (this.settings.modeA == 0) {
           // Show speed/distance
           if (di <= 0)
-            drawFix({
+            this.drawFix({
               speed: sp,
-              sats: lf.satellites,
+              sats: this.lf.satellites,
               alt: "",
               alt_units: "",
               age: age,
-              fix: lf.fix,
+              fix: this.lf.fix,
             });
           // No WP selected
           else
-            drawFix({
+            this.drawFix({
               speed: sp,
-              sats: lf.satellites,
+              sats: this.lf.satellites,
               alt: di,
               alt_units: this.settings.dist_unit,
               age: age,
-              fix: lf.fix,
+              fix: this.lf.fix,
             });
         }
         if (this.settings.modeA == 2) {
           // Large clock
-          drawClock();
+          this.drawClock();
         }
       }
     },
@@ -937,53 +941,53 @@ XoX o o XoX
     setLayoutRace: function () {
       //BEGIN FORK
       function updateClock() {
-        if (!canDraw) return;
-        drawTime();
+        if (!this.canDraw) return;
+        this.drawTime();
         g.reset();
         g.drawImage(img, 0, 40);
-        if (emulator) {
-          max.spd++;
-          max.alt++;
+        if (this.emulator) {
+          this.max.spd++;
+          this.max.alt++;
         }
       }
 
       function startDraw() {
-        canDraw = true;
-        setLpMode("SuperE"); // off
+        this.canDraw = true;
+        this.setLpMode("SuperE"); // off
         g.clear();
         Bangle.drawWidgets();
-        onGPS(lf); // draw app screen
+        this.onGPS(this.lf); // draw app screen
       }
 
       function stopDraw() {
-        canDraw = false;
-        if (!tmrLP)
-          tmrLP = setInterval(function () {
-            if (lf.fix) setLpMode("PSMOO");
+        this.canDraw = false;
+        if (!this.tmrLP)
+          this.tmrLP = setInterval(function () {
+            if (this.lf.fix) this.setLpMode("PSMOO");
           }, 10000); //Drop to low power in 10 secs. Keep lp mode off until we have a  first fix.
       }
 
 
       function btn1press(longpress) {
-        if (emulator) console.log("Btn1, long=" + longpress);
+        if (this.emulator) console.log("Btn1, long=" + longpress);
         if (this.settings.modeA == 1) {
           // Spd+Alt mode - Switch between fix and MAX
           if (!longpress)
-            showMax = !showMax; // Short press toggle fix/max display
+            this.showMax = !this.showMax; // Short press toggle fix/max display
           else {
-            max.spd = 0;
-            max.alt = 0;
+            this.max.spd = 0;
+            this.max.alt = 0;
           } // Long press resets max values.
-        } else nxtWp(1); // Spd+Dist or Clock mode - Select next waypoint
-        onGPS(lf);
+        } else this.nxtWp(1); // Spd+Dist or Clock mode - Select next waypoint
+        this.onGPS(this.lf);
       }
       function btn2press() {
-        if (emulator) console.log("Btn2");
-        pwrSav = !pwrSav;
-        if (pwrSav) {
+        if (this.emulator) console.log("Btn2");
+        this.pwrSav = !this.pwrSav;
+        if (this.pwrSav) {
           LED1.reset();
-          var s = require("Storage").readJSON("setting.json", 1) || {};
-          var t = s.timeout || 10;
+          //var storage = require("Storage").readJSON("setting.json", 1) || {};
+          var t = this.s.timeout || 10;
           Bangle.setLCDTimeout(t);
         } else {
           Bangle.setLCDTimeout(0);
@@ -992,18 +996,18 @@ XoX o o XoX
         }
       }
       function btn3press() {
-        if (emulator) console.log("Btn3");
+        if (this.emulator) console.log("Btn3");
         this.settings.modeA = this.settings.modeA + 1;
         if (this.settings.modeA > 2) this.settings.modeA = 0;
-        if (emulator) console.log("this.settings.modeA=" + this.settings.modeA);
-        savSettings();
-        onGPS(lf);
+        if (this.emulator) console.log("this.settings.modeA=" + this.settings.modeA);
+        this.saveSettings();
+        this.onGPS(this.lf);
       }
       function btn4press() {
-        if (emulator) console.log("Btn4");
+        if (this.emulator) console.log("Btn4");
         this.settings.primSpd = !this.settings.primSpd;
-        savSettings();
-        onGPS(lf); // Update display
+        this.saveSettings();
+        this.onGPS(this.lf); // Update display
       }
 
       function setButtons() {
@@ -1046,10 +1050,10 @@ XoX o o XoX
       this.settings.spdFilt = this.settings.spdFilt == undefined ? true : this.settings.spdFilt;
       this.settings.altFilt = this.settings.altFilt == undefined ? true : this.settings.altFilt;
 
-      if (this.settings.spdFilt) var spdFilter = new KalmanFilter({ R: 0.1, Q: 1 });
-      if (this.settings.altFilt) var altFilter = new KalmanFilter({ R: 0.01, Q: 2 });
+      if (this.settings.spdFilt) this.spdFilter = new KalmanFilter({ R: 0.1, Q: 1 });
+      if (this.settings.altFilt) this.altFilter = new KalmanFilter({ R: 0.01, Q: 2 });
 
-      loadWp();
+      this.loadWp();
 
       /*
       Colour Pallet Idx
@@ -1060,10 +1064,10 @@ XoX o o XoX
       */
       const background = 0; // g.theme.bg = 0xFFFF = gelb!?
       var img = {
-        width: buf.getWidth(),
-        height: buf.getHeight(),
+        width: this.buf.getWidth(),
+        height: this.buf.getHeight(),
         bpp: 2,
-        buffer: buf.buffer,
+        buffer: this.buf.buffer,
         palette: new Uint16Array([background, 0x4fe0, 0xefe0, 0x07db]), // "Default"
       };
 
@@ -1099,7 +1103,7 @@ XoX o o XoX
 
       // All set up. Lets go.
       g.clear();
-      onGPS(lf);
+      this.onGPS(this.lf);
       Bangle.setGPSPower(1);
 
       if (gpssetup) {
@@ -1110,7 +1114,7 @@ XoX o o XoX
         Bangle.setGPSPower(1);
       }
 
-      Bangle.on("GPS", onGPS);
+      Bangle.on("GPS", this.onGPS);
 
       setButtons();
       setInterval(updateClock, 10000);

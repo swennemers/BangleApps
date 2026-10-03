@@ -2,7 +2,7 @@
   "id": "regattatimerSW",
   "name": "Regatta Timer SW",
   "shortName": "RegattaTimer",
-  "version": "0.41",
+  "version": "0.10",
   "author": "swennemers",
   "description": "Regatta Timer with 5-4-1 Countdown combined with the GPS Adventure Sport Features",
   "icon": "icon.png",

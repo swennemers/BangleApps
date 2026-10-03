@@ -13,6 +13,9 @@
       "theme": "Dark",
     }, storage.readJSON(file, true) || {});
 
+  function writeSettings() {
+    require('Storage').write(file,settings);
+  }
   function save(key, value) {
     settings[key] = value;
     storage.writeJSON(file, settings);
@@ -76,12 +79,14 @@
     }
   };
 
-  E.showMenu({
-    "" : { "title" : "Regatta Timer SW" },
-    "< Back" : () => back(),
+  const appMenu = {
+    '': {'title': 'RegattaSW'},
+    '< Back': back,
+    '< Load Regatta Timer SW': ()=>{load('regattaTimerSW.app.js');},
     'Units' : function() { E.showMenu(unitsMenu); },
     'Colours' : function() { E.showMenu(colMenu); },
     'Kalman Filter' : function() { E.showMenu(kalMenu); },
+
     "GPS": {
       value: !!settings.gps,  // !! converts undefined to false
       onchange: v => {
@@ -131,5 +136,7 @@
         save("debug", v);
       }
     },
-  });
+  };
+  
+  E.showMenu(appMenu);
 })
